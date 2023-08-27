@@ -13,12 +13,59 @@ const CreatePost = () => {
   const [generatingImg, setGeneratingImg] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmission = () => {
+  const generateImage = async () => {
+    if (form.prompt && form.name) {
+      try {
+        setGeneratingImg(true);
+        const response = await fetch('http://localhost:8080/api/v1/dalle', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            prompt: form.prompt,
+          }),
+        });
 
+        const data = await response.json();
+        setForm({ ...form, photo: `data:image/jpeg;base64,${data.photo}` });
+      } catch (err) {
+        console.log(err)
+        alert(err);
+      } finally {
+        setGeneratingImg(false);
+      }
+    } else {
+      alert('Please provide proper name and prompt');
+    }
   };
 
-  const generateImage = () => {
+  const handleSubmission = async (e) => {
+    e.preventDefault();
 
+    if (form.prompt && form.photo) {
+      setLoading(true);
+      try {
+        const response = await fetch('http://localhost:8080/api/v1/dalle', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ ...form }),
+        });
+
+        await response.json();
+        console.log("Inside hadleSubmission");
+        alert('Success');
+        navigate('/');
+      } catch (err) {
+        alert(err);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      alert('Please generate an image with proper details');
+    }
   };
 
   const handleChange = (e) => {
@@ -32,18 +79,10 @@ const CreatePost = () => {
 
   return (
     <section className="max-w-7xl mx-auto">
-      <div>
-        {/* Heading and description */}
-        <h1 className="font-extrabold text-[#222328] text-[32px]">
-          Create
-        </h1>
 
-        <p className="mt-2 text-[#666e75] text-[16px] max-w-[500px]">
-          Create imaginative and visually stunning images through DALL-E AI and share them with the community
-        </p>
-      </div>
+      {/* Form */}
+      <form className="max-w-3xl" onSubmit={handleSubmission}>
 
-      <form className="mt-16 max-w-3xl" onSubmit={handleSubmission}>
         <div className="flex flex-col gap-5">
           <FormField
             labelName="Your Name"
@@ -88,6 +127,7 @@ const CreatePost = () => {
           </div>
         </div>
 
+        {/* Generate Button */}
         <div className="mt-5 flex gap-5">
           <button
             type="button"
@@ -99,6 +139,7 @@ const CreatePost = () => {
           </button>
         </div>
 
+        {/* Section - Share with the community */}
         <div className="mt-10">
           <p className="mt-2 text-[#666e75] text-14px">
             Once you have created the image, you can share it with others in the community
@@ -116,4 +157,4 @@ const CreatePost = () => {
   )
 }
 
-export default CreatePost
+export default CreatePost;
